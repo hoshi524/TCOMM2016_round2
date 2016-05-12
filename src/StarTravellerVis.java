@@ -104,7 +104,7 @@ public class StarTravellerVis {
 			ufoParm = new int[3 * NUfo];
 			starParm = new int[2 * NStar];
 
-			System.out.println("NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
+			System.out.println("seed  = " + seed + " NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
 
 			// Generate stars
 			// Generate galaxy center positions
@@ -179,7 +179,7 @@ public class StarTravellerVis {
 				try {
 					ret = solver.makeMoves(ufoParm, ship);
 				} catch (Exception e) {
-					addFatalError("Move #" + turns + ": Failed to get result from makeMoves.");
+					e.printStackTrace();
 					return -1.0;
 				}
 				// move ship
@@ -251,7 +251,7 @@ public class StarTravellerVis {
 
 			if (saveFile != null) saveCase(saveFile);
 
-			System.out.println("Ended at turn " + turns + " out of a maximum of " + (NStar * 4) + ".");
+			// System.out.println("Ended at turn " + turns + " out of a maximum of " + (NStar * 4) + ".");
 			return energy;
 		} catch (Exception e) {
 			addFatalError("An exception occurred while trying to process your program's results.");
@@ -432,16 +432,16 @@ public class StarTravellerVis {
 
 	// ---------------------------------------------------
 	public static void main(String[] args) {
-		long seed = 1;
 		vis = false;
 		for (int i = 0; i < args.length; i++) {
-			if (args[i].equals("-seed")) seed = Long.parseLong(args[++i]);
 			if (args[i].equals("-save")) saveFile = args[++i];
 			if (args[i].equals("-vis")) vis = true;
 			if (args[i].equals("-delay")) delay = Integer.parseInt(args[++i]);
 			if (args[i].equals("-noufo")) drawUfo = false;
 		}
-		new StarTravellerVis(seed);
+		for (long seed = 1; seed <= 100; ++seed) {
+			new StarTravellerVis(seed);
+		}
 	}
 
 	// ---------------------------------------------------
