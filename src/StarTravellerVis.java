@@ -20,6 +20,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -104,7 +106,7 @@ public class StarTravellerVis {
 			ufoParm = new int[3 * NUfo];
 			starParm = new int[2 * NStar];
 
-			System.out.println("seed  = " + seed + " NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
+			// System.out.println("seed  = " + seed + " NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
 
 			// Generate stars
 			// Generate galaxy center positions
@@ -150,11 +152,10 @@ public class StarTravellerVis {
 	}
 
 	// ---------------------------------------------------
-	public double runTest(long seed) {
+	public double runTest(Solver solver, long seed) {
 		try {
 			generate(seed);
 			int turns = 0;
-			StarTraveller solver = new StarTraveller();
 			try {
 				solver.init(starParm);
 			} catch (Exception e) {
@@ -420,28 +421,113 @@ public class StarTravellerVis {
 	}
 
 	// ---------------------------------------------------
-	public StarTravellerVis(long seed) {
+	public StarTravellerVis() {
 		//interface for runTest
 		if (vis) {
 			jf = new JFrame();
 			v = new Vis();
 			jf.getContentPane().add(v);
 		}
-		System.out.println("Score = " + runTest(seed));
 	}
 
 	// ---------------------------------------------------
 	public static void main(String[] args) {
+		if (false) {
+			vis = false;
+			for (int i = 0; i < args.length; i++) {
+				if (args[i].equals("-save")) saveFile = args[++i];
+				if (args[i].equals("-vis")) vis = true;
+				if (args[i].equals("-delay")) delay = Integer.parseInt(args[++i]);
+				if (args[i].equals("-noufo")) drawUfo = false;
+			}
+			for (long seed = 1; seed <= 100; ++seed) {
+				System.out.println("score  = " + new StarTravellerVis().runTest(new Solver() {
+					StarTraveller solver = new StarTraveller();
+
+					@Override
+					public int init(int[] stars) {
+						return solver.init(stars);
+					}
+
+					@Override
+					public int[] makeMoves(int[] ufos, int[] ships) {
+						return solver.makeMoves(ufos, ships);
+					}
+				}, seed));
+			}
+		} else {
+			new StarTravellerVis().compare();
+		}
+	}
+
+	void compare() {
+		class ParameterClass {
+			volatile double d;
+			volatile int c;
+			volatile int timeover;
+		}
 		vis = false;
-		for (int i = 0; i < args.length; i++) {
-			if (args[i].equals("-save")) saveFile = args[++i];
-			if (args[i].equals("-vis")) vis = true;
-			if (args[i].equals("-delay")) delay = Integer.parseInt(args[++i]);
-			if (args[i].equals("-noufo")) drawUfo = false;
+		final int MAX_TIME = 20000;
+		final ParameterClass sum1 = new ParameterClass();
+		final ParameterClass sum2 = new ParameterClass();
+		ExecutorService es = Executors.newFixedThreadPool(2);
+
+		for (int seed = 1, size = seed + 1000; seed < size; seed++) {
+			final int Seed = seed;
+			es.submit(() -> {
+				try {
+					long time1 = System.currentTimeMillis();
+					double score1 = new StarTravellerVis().runTest(new Solver() {
+						StarTraveller solver = new StarTraveller();
+
+						@Override
+						public int init(int[] stars) {
+							return solver.init(stars);
+						}
+
+						@Override
+						public int[] makeMoves(int[] ufos, int[] ships) {
+							return solver.makeMoves(ufos, ships);
+						}
+					}, Seed);
+					time1 = System.currentTimeMillis() - time1;
+					sum1.d += score1;
+					++sum1.c;
+					if (time1 > MAX_TIME) sum1.timeover++;
+					long time2 = System.currentTimeMillis();
+					double score2 = new StarTravellerVis().runTest(new Solver() {
+						StarTraveller1 solver = new StarTraveller1();
+
+						@Override
+						public int init(int[] stars) {
+							return solver.init(stars);
+						}
+
+						@Override
+						public int[] makeMoves(int[] ufos, int[] ships) {
+							return solver.makeMoves(ufos, ships);
+						}
+					}, Seed);
+					time2 = System.currentTimeMillis() - time2;
+					sum2.d += score2;
+					++sum2.c;
+					if (time2 > MAX_TIME) sum2.timeover++;
+
+					double max = Math.max(sum1.d, sum2.d);
+					System.err.println(String.format("Seed : %3d  %.2f : %.2f  %8.2f : %8.2f  %5d : %5d", Seed, sum1.d / max, sum2.d / max,
+							score1, score2, time1, time2));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
 		}
-		for (long seed = 1; seed <= 100; ++seed) {
-			new StarTravellerVis(seed);
-		}
+		es.shutdown();
+	}
+
+	interface Solver {
+		public int init(int[] stars);
+
+		public int[] makeMoves(int[] ufos, int[] ships);
 	}
 
 	// ---------------------------------------------------
