@@ -15,6 +15,7 @@ public class StarTraveller {
 
 	int a, s, p, t, f, maxt, dist[][];
 	boolean[] u;
+	MinCostFlow flow;
 
 	public int init(int[] stars) {
 		s = stars.length / 2;
@@ -43,30 +44,30 @@ public class StarTraveller {
 			f = ufos.length / 3;
 			p = ships.length;
 			a = ships.length;
+			flow = new MinCostFlow(p + s + 2);
 			return ships;
 		} else if ((s - a) < (maxt - t) * p) {
-			int[] ret = Arrays.copyOf(ships, ships.length);
+			int[] res = Arrays.copyOf(ships, ships.length);
 			for (int i = 0, min = Math.min(p, f); i < min; ++i) {
 				int d = ufos[i * 3 + 1];
-				ret[i] = d;
+				res[i] = d;
 				if (!u[d]) {
 					u[d] = true;
 					++a;
 				}
 			}
-			return ret;
+			return res;
 		} else {
-			int[] ret = Arrays.copyOf(ships, ships.length);
-			int ri = 0;
-			for (int i = 0; i < s; ++i) {
-				if (!u[i]) {
-					u[i] = true;
+			int[] res = Arrays.copyOf(ships, ships.length);
+			int[] go = flow.matching(dist, ships);
+			for (int i = 0; i < p; ++i) {
+				if (go[i] != -1) {
+					res[i] = go[i];
+					u[go[i]] = true;
 					++a;
-					ret[ri++] = i;
-					if (ri == ships.length) break;
 				}
 			}
-			return ret;
+			return res;
 		}
 	}
 
@@ -164,8 +165,38 @@ public class StarTraveller {
 			return res;
 		}
 
-		int[] matching(int[] ships) {
-			return null;
+		int[] matching(int[][] dist, int[] ships) {
+			V = p + s - a + 2;
+			int source = V - 2, think = V - 1;
+			for (int i = 0; i < V; ++i) {
+				G[i].clear();
+			}
+			int trans[] = new int[s], ti = 0;
+			for (int i = 0; i < s; ++i) {
+				if (u[i]) continue;
+				trans[ti++] = i;
+			}
+			trans = Arrays.copyOf(trans, ti);
+			for (int i = 0; i < p; ++i) {
+				add_edge(source, i, 1, 0);
+			}
+			for (int i = 0; i < s - a; ++i) {
+				add_edge(p + i, think, 1, 0);
+			}
+			for (int i = 0; i < p; ++i) {
+				for (int j = 0; j < s - a; ++j) {
+					add_edge(i, p + j, 1, dist[ships[i]][trans[j]]);
+				}
+			}
+			min_cost_flow(source, think, Math.min(p, s - a));
+			int res[] = new int[ships.length];
+			Arrays.fill(res, -1);
+			for (int i = 0; i < p; ++i) {
+				if (go[i] != -1) {
+					res[i] = trans[go[i] - p];
+				}
+			}
+			return res;
 		}
 	}
 
