@@ -106,7 +106,7 @@ public class StarTravellerVis {
 			ufoParm = new int[3 * NUfo];
 			starParm = new int[2 * NStar];
 
-			System.out.println("seed  = " + seed + " NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
+			// System.out.println("seed  = " + seed + " NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
 
 			// Generate stars
 			// Generate galaxy center positions
@@ -433,7 +433,7 @@ public class StarTravellerVis {
 
 	// ---------------------------------------------------
 	public static void main(String[] args) {
-		if (true) {
+		if (false) {
 			vis = false;
 			for (int i = 0; i < args.length; i++) {
 				if (args[i].equals("-save")) saveFile = args[++i];
@@ -441,7 +441,7 @@ public class StarTravellerVis {
 				if (args[i].equals("-delay")) delay = Integer.parseInt(args[++i]);
 				if (args[i].equals("-noufo")) drawUfo = false;
 			}
-			for (long seed = 258; seed <= 258; ++seed) {
+			for (long seed = 1; seed <= 1000; ++seed) {
 				long start = System.currentTimeMillis();
 				double score =  new StarTravellerVis().runTest(new Solver() {
 					StarTraveller solver = new StarTraveller();

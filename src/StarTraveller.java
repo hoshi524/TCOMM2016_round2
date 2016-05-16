@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.PriorityQueue;
 
 public class StarTraveller {
@@ -32,11 +31,11 @@ public class StarTraveller {
 				dist[i][j] = x * x + y * y;
 			}
 		}
-		map = null;
+		search = null;
 		return 0;
 	}
 
-	HashMap<Integer, Integer> map;
+	int[] search;
 
 	public int[] makeMoves(int[] ufos, int[] ships) {
 		++t;
@@ -65,27 +64,29 @@ public class StarTraveller {
 			return res;
 		} else {
 			int[] res = Arrays.copyOf(ships, ships.length);
-			if (map == null) {
+			if (search == null) {
 				int stars[] = new int[s - a];
 				for (int i = 0, si = 0; i < s; ++i) {
 					if (!u[i]) {
 						stars[si++] = i;
 					}
 				}
-				map = search(ships, stars);
+				search = search(ships, stars);
 			}
 			for (int i = 0; i < p; ++i) {
-				Integer to = map.get(res[i]);
-				if (to != null && !u[to]) {
-					u[to] = true;
-					res[i] = to;
+				for (int t = 0; t < s; ++t) {
+					if (ships[i] == search[t] && !u[t]) {
+						u[t] = true;
+						res[i] = t;
+						break;
+					}
 				}
 			}
 			return res;
 		}
 	}
 
-	HashMap<Integer, Integer> search(int[] ships, int[] stars) {
+	int[] search(int[] ships, int[] stars) {
 		int now[] = new int[ships.length + stars.length], v = 0, rev[] = new int[now.length];
 		int dist[][] = new int[now.length][now.length];
 		int trans[] = new int[now.length];
@@ -128,7 +129,7 @@ public class StarTraveller {
 				remain[from] = remain[--ri];
 			}
 		}
-		int best[] = Arrays.copyOf(now, now.length), bv = v, count = 0, limit = now.length * now.length;
+		int best[] = Arrays.copyOf(rev, rev.length), bv = v, count = 0, limit = now.length * now.length;
 		for (int roop = 0; roop < 0xffffff; ++roop) {
 			int i = ships.length + x.next(stars.length), j = x.next(now.length);
 			if (i == j || now[j] == i) continue;
@@ -158,17 +159,16 @@ public class StarTraveller {
 				rev[i] = j;
 				if (bv > v) {
 					bv = v;
-					System.arraycopy(now, 0, best, 0, now.length);
+					System.arraycopy(rev, 0, best, 0, rev.length);
 				}
 			} else {
 				++count;
 			}
 		}
-		HashMap<Integer, Integer> res = new HashMap<>();
+		int[] res = new int[this.s];
+		Arrays.fill(res, -1);
 		for (int i = 0; i < best.length; ++i) {
-			if (best[i] != -1) {
-				res.put(trans[i], trans[best[i]]);
-			}
+			if (best[i] != -1) res[trans[i]] = trans[best[i]];
 		}
 		return res;
 	}
