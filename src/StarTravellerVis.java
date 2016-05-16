@@ -432,7 +432,7 @@ public class StarTravellerVis {
 
 	// ---------------------------------------------------
 	public static void main(String[] args) {
-		if (false) {
+		if (true) {
 			vis = false;
 			for (int i = 0; i < args.length; i++) {
 				if (args[i].equals("-save")) saveFile = args[++i];
@@ -440,8 +440,9 @@ public class StarTravellerVis {
 				if (args[i].equals("-delay")) delay = Integer.parseInt(args[++i]);
 				if (args[i].equals("-noufo")) drawUfo = false;
 			}
-			for (long seed = 1; seed <= 100; ++seed) {
-				System.out.println("score  = " + new StarTravellerVis().runTest(new Solver() {
+			for (long seed = 1; seed <= 10; ++seed) {
+				long start = System.currentTimeMillis();
+				double score =  new StarTravellerVis().runTest(new Solver() {
 					StarTraveller solver = new StarTraveller();
 
 					@Override
@@ -453,7 +454,8 @@ public class StarTravellerVis {
 					public int[] makeMoves(int[] ufos, int[] ships) {
 						return solver.makeMoves(ufos, ships);
 					}
-				}, seed));
+				}, seed);
+				System.out.println(String.format("seed = %2d score = %7.1f time = %5d", seed, score, System.currentTimeMillis() - start));
 			}
 		} else {
 			new StarTravellerVis().compare();
