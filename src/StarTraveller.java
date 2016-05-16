@@ -129,17 +129,11 @@ public class StarTraveller {
 				remain[from] = remain[--ri];
 			}
 		}
-		int best[] = Arrays.copyOf(rev, rev.length), bv = v, limit = stars.length * now.length;
-		for (int roop = 0; roop < 0xfffffff; roop += limit) {
-			int buf[] = new int[limit], bi = 0, bs = 0;
-			for (int i = ships.length; i < now.length; ++i) {
-				for (int j = 0; j < now.length; ++j) {
-					if (i == j || now[j] == i) continue;
-					buf[bs++] = i * now.length + j;
-				}
-			}
-			for (bi = 0; bi < bs; ++bi) {
-				int b = x.next(bs - bi), i = buf[b] / now.length, j = buf[b] % now.length;
+		int best[] = Arrays.copyOf(rev, rev.length), bv = v;
+		for (int roop = 0; roop < 0xffffff; ++roop) {
+			{
+				int i = ships.length + x.next(stars.length), j = x.next(now.length);
+				if (i == j || now[j] == i) continue;
 				int tv = v - dist[rev[i]][i] + dist[j][i];
 				if (now[i] != -1) {
 					tv += dist[rev[i]][now[i]] - dist[i][now[i]];
@@ -167,40 +161,33 @@ public class StarTraveller {
 						bv = v;
 						System.arraycopy(rev, 0, best, 0, rev.length);
 					}
-					break;
-				}
-				{
-					int tmp = buf[b];
-					buf[b] = buf[bs - bi - 1];
-					buf[bs - bi - 1] = tmp;
 				}
 			}
-			if (bi == bs) {
-				for (int a = 0; a < 10; ++a) {
-					int i = ships.length + x.next(stars.length), j = x.next(now.length);
-					if (i == j || now[j] == i) continue;
-					int tv = v - dist[rev[i]][i] + dist[j][i];
-					if (now[i] != -1) {
-						tv += dist[rev[i]][now[i]] - dist[i][now[i]];
+			{
+				int i = ships.length + x.next(stars.length), j = ships.length + x.next(stars.length);
+				if (i == j || rev[i] == j || rev[j] == i) continue;
+				int a = i, b = j;
+				while (rev[a] != -1)
+					a = rev[a];
+				while (rev[b] != -1)
+					b = rev[b];
+				if (a == b) {
+					// TODO
+				} else {
+					a = rev[i];
+					b = rev[j];
+					int tv = v - dist[a][i] - dist[b][j] + dist[b][i] + dist[a][j];
+					if (v > tv) {
+						v = tv;
+						now[a] = j;
+						now[b] = i;
+						rev[i] = b;
+						rev[j] = a;
+						if (bv > v) {
+							bv = v;
+							System.arraycopy(rev, 0, best, 0, rev.length);
+						}
 					}
-					if (now[j] != -1) {
-						tv += dist[i][now[j]] - dist[j][now[j]];
-					}
-					v = tv;
-					if (now[i] == -1) {
-						now[rev[i]] = -1;
-					} else {
-						now[rev[i]] = now[i];
-						rev[now[i]] = rev[i];
-					}
-					if (now[j] == -1) {
-						now[i] = -1;
-					} else {
-						now[i] = now[j];
-						rev[now[j]] = i;
-					}
-					now[j] = i;
-					rev[i] = j;
 				}
 			}
 		}
