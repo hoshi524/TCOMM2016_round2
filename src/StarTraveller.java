@@ -43,14 +43,16 @@ public class StarTraveller {
 		if (t == 1) {
 			// first turn
 			for (int i = 0; i < ships.length; ++i) {
-				u[ships[i]] = true;
+				if (!u[ships[i]]) {
+					u[ships[i]] = true;
+					++a;
+				}
 			}
 			f = ufos.length / 3;
 			p = ships.length;
-			a = ships.length;
 			flow = new MinCostFlow(p + s + 2);
 			return ships;
-		} else if ((s - a) < (maxt - t)) {
+		} else if (f > 0 && (s - a) < (maxt - t)) {
 			int[] res = Arrays.copyOf(ships, ships.length);
 			for (int i = 0, min = Math.min(p, f); i < min; ++i) {
 				int d = ufos[i * 3 + 1];
@@ -63,14 +65,6 @@ public class StarTraveller {
 			return res;
 		} else {
 			int[] res = Arrays.copyOf(ships, ships.length);
-			//			int[] go = flow.matching(dist, ships);
-			//			for (int i = 0; i < p; ++i) {
-			//				if (go[i] != -1) {
-			//					res[i] = go[i];
-			//					u[go[i]] = true;
-			//					++a;
-			//				}
-			//			}
 			if (map == null) {
 				int stars[] = new int[s - a];
 				for (int i = 0, si = 0; i < s; ++i) {
@@ -81,8 +75,10 @@ public class StarTraveller {
 				map = search(ships, stars);
 			}
 			for (int i = 0; i < p; ++i) {
-				if (map.containsKey(res[i])) {
-					res[i] = map.get(res[i]);
+				Integer to = map.get(res[i]);
+				if (to != null && !u[to]) {
+					u[to] = true;
+					res[i] = to;
 				}
 			}
 			return res;
@@ -104,28 +100,36 @@ public class StarTraveller {
 		Arrays.fill(rev, -1);
 		XorShift x = new XorShift();
 		{
-			int remainTo[] = new int[stars.length], rti = stars.length;
-			for (int i = 0; i < remainTo.length; ++i) {
-				remainTo[i] = ships.length + i;
+			int remain[] = new int[now.length], ri = 0;
+			int target[] = new int[now.length], ti = 0;
+			for (ri = 0; ri < stars.length; ++ri) {
+				remain[ri] = ships.length + ri;
 			}
-			int remainFrom[] = new int[ships.length];
-			for (int i = 0; i < remainFrom.length; ++i) {
-				remainFrom[i] = i;
+			for (ti = 0; ti < ships.length; ++ti) {
+				target[ti] = ti;
 			}
-			for (int i = 0; i < remainTo.length; ++i) {
-				int a = x.next(ships.length), from = remainFrom[a];
-				int b = x.next(rti--), to = remainTo[b];
-				remainFrom[a] = to;
-				remainTo[b] = remainTo[rti];
-				now[from] = to;
-				rev[to] = from;
-				v += dist[from][to];
+			while (ri > 0) {
+				int d = Integer.MAX_VALUE, from = -1, to = -1;
+				for (int i = 0; i < ri; ++i) {
+					int t = remain[i];
+					for (int j = 0; j < ti; ++j) {
+						int f = target[j];
+						if (d > dist[t][f]) {
+							d = dist[t][f];
+							from = i;
+							to = j;
+						}
+					}
+				}
+				now[target[to]] = remain[from];
+				rev[remain[from]] = target[to];
+				v += d;
+				target[to] = remain[from];
+				remain[from] = remain[--ri];
 			}
 		}
-		int best[] = Arrays.copyOf(now, now.length), bv = v, count = 0;
-		// debug(best, bv);
-		for (int roop = 0; roop < 0xfffffff; ++roop) {
-			boolean bad = count > 10000 && x.next(count) > 10000;
+		int best[] = Arrays.copyOf(now, now.length), bv = v, count = 0, limit = now.length * now.length;
+		for (int roop = 0; roop < 0xffffff; ++roop) {
 			int i = ships.length + x.next(stars.length), j = x.next(now.length);
 			if (i == j || now[j] == i) continue;
 			int tv = v - dist[rev[i]][i] + dist[j][i];
@@ -135,8 +139,8 @@ public class StarTraveller {
 			if (now[j] != -1) {
 				tv += dist[i][now[j]] - dist[j][now[j]];
 			}
-			if (bad || v > tv) {
-				if (v > tv) count = 0;
+			if (v > tv || count > limit) {
+				count = 0;
 				v = tv;
 				if (now[i] == -1) {
 					now[rev[i]] = -1;
@@ -156,10 +160,10 @@ public class StarTraveller {
 					bv = v;
 					System.arraycopy(now, 0, best, 0, now.length);
 				}
+			} else {
+				++count;
 			}
-			++count;
 		}
-		// debug(best, bv);
 		HashMap<Integer, Integer> res = new HashMap<>();
 		for (int i = 0; i < best.length; ++i) {
 			if (best[i] != -1) {
@@ -263,16 +267,11 @@ public class StarTraveller {
 			return res;
 		}
 
-		int[] matching(int[][] dist, int[] ships) {
+		int[] matching(int[][] dist, int[] ships, int[] stars) {
 			V = p + s - a + 2;
 			int source = V - 2, think = V - 1;
 			for (int i = 0; i < V; ++i) {
 				G[i].clear();
-			}
-			int trans[] = new int[s], ti = 0;
-			for (int i = 0; i < s; ++i) {
-				if (u[i]) continue;
-				trans[ti++] = i;
 			}
 			for (int i = 0; i < p; ++i) {
 				add_edge(source, i, 1, 0);
@@ -282,7 +281,7 @@ public class StarTraveller {
 			}
 			for (int i = 0; i < p; ++i) {
 				for (int j = 0; j < s - a; ++j) {
-					add_edge(i, p + j, 1, dist[ships[i]][trans[j]]);
+					add_edge(i, p + j, 1, dist[ships[i]][stars[j]]);
 				}
 			}
 			min_cost_flow(source, think, Math.min(p, s - a));
@@ -290,7 +289,7 @@ public class StarTraveller {
 			Arrays.fill(res, -1);
 			for (int i = 0; i < p; ++i) {
 				if (go[i] != -1) {
-					res[i] = trans[go[i] - p];
+					res[i] = stars[go[i] - p];
 				}
 			}
 			return res;

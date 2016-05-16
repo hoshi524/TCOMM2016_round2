@@ -106,7 +106,7 @@ public class StarTravellerVis {
 			ufoParm = new int[3 * NUfo];
 			starParm = new int[2 * NStar];
 
-			// System.out.println("seed  = " + seed + " NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
+			System.out.println("seed  = " + seed + " NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
 
 			// Generate stars
 			// Generate galaxy center positions
@@ -241,6 +241,7 @@ public class StarTravellerVis {
 			}
 			if (visited != NStar) {
 				addFatalError("All stars not visited after " + (NStar * 4) + " turns.");
+				System.out.println(visited + " / " + NStar);
 				return -1.0;
 			}
 			if (vis) {
@@ -440,7 +441,7 @@ public class StarTravellerVis {
 				if (args[i].equals("-delay")) delay = Integer.parseInt(args[++i]);
 				if (args[i].equals("-noufo")) drawUfo = false;
 			}
-			for (long seed = 1; seed <= 10; ++seed) {
+			for (long seed = 258; seed <= 258; ++seed) {
 				long start = System.currentTimeMillis();
 				double score =  new StarTravellerVis().runTest(new Solver() {
 					StarTraveller solver = new StarTraveller();
@@ -493,7 +494,6 @@ public class StarTravellerVis {
 						}
 					}, Seed);
 					time1 = System.currentTimeMillis() - time1;
-					sum1.d += score1;
 					++sum1.c;
 					if (time1 > MAX_TIME) sum1.timeover++;
 					long time2 = System.currentTimeMillis();
@@ -511,9 +511,10 @@ public class StarTravellerVis {
 						}
 					}, Seed);
 					time2 = System.currentTimeMillis() - time2;
-					sum2.d += score2;
 					++sum2.c;
 					if (time2 > MAX_TIME) sum2.timeover++;
+					sum1.d += score1 / Math.max(score1, score2);
+					sum2.d += score2 / Math.max(score1, score2);
 
 					double max = Math.max(sum1.d, sum2.d);
 					System.err.println(String.format("Seed : %3d  %.2f : %.2f  %8.2f : %8.2f  %5d : %5d", Seed, sum1.d / max, sum2.d / max,
