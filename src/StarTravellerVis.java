@@ -441,7 +441,7 @@ public class StarTravellerVis {
 				if (args[i].equals("-delay")) delay = Integer.parseInt(args[++i]);
 				if (args[i].equals("-noufo")) drawUfo = false;
 			}
-			for (long seed = 1; seed <= 1000; ++seed) {
+			for (long seed = 1; seed <= 10; ++seed) {
 				long start = System.currentTimeMillis();
 				double score =  new StarTravellerVis().runTest(new Solver() {
 					StarTraveller solver = new StarTraveller();
