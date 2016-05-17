@@ -157,22 +157,54 @@ public class StarTraveller {
 					}
 					now[j] = i;
 					rev[i] = j;
-					if (bv > v) {
-						bv = v;
-						System.arraycopy(rev, 0, best, 0, rev.length);
-					}
 				}
 			}
 			{
 				int i = ships.length + x.next(stars.length), j = ships.length + x.next(stars.length);
 				if (i == j || rev[i] == j || rev[j] == i) continue;
-				int a = i, b = j;
-				while (rev[a] != -1)
+				int a = i, b = j, as = 0, bs = 0;
+				while (rev[a] != -1) {
 					a = rev[a];
-				while (rev[b] != -1)
+					++as;
+				}
+				while (rev[b] != -1) {
 					b = rev[b];
+					++bs;
+				}
 				if (a == b) {
-					// TODO
+					a = rev[i];
+					b = rev[j];
+					int tv = v - dist[a][i] - dist[b][j] + dist[i][j] + dist[a][b];
+					if (v > tv) {
+						v = tv;
+						if (as > bs) {
+							int t = rev[i], g = rev[j];
+							while (t != g) {
+								int n = rev[t];
+								int tmp = now[t];
+								now[t] = rev[t];
+								rev[t] = tmp;
+								t = n;
+							}
+							now[b] = a;
+							now[j] = i;
+							rev[a] = b;
+							rev[i] = j;
+						} else {
+							int t = rev[j], g = rev[i];
+							while (t != g) {
+								int n = rev[t];
+								int tmp = now[t];
+								now[t] = rev[t];
+								rev[t] = tmp;
+								t = n;
+							}
+							now[a] = b;
+							now[i] = j;
+							rev[b] = a;
+							rev[j] = i;
+						}
+					}
 				} else {
 					a = rev[i];
 					b = rev[j];
@@ -183,12 +215,12 @@ public class StarTraveller {
 						now[b] = i;
 						rev[i] = b;
 						rev[j] = a;
-						if (bv > v) {
-							bv = v;
-							System.arraycopy(rev, 0, best, 0, rev.length);
-						}
 					}
 				}
+			}
+			if (bv > v) {
+				bv = v;
+				System.arraycopy(rev, 0, best, 0, rev.length);
 			}
 		}
 		int[] res = new int[this.s];
