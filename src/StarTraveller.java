@@ -57,12 +57,56 @@ public class StarTraveller {
 			return ships;
 		} else if (f > 0 && (s - a) < (maxt - t)) {
 			int[] res = Arrays.copyOf(ships, ships.length);
-			for (int i = 0, min = Math.min(p, f); i < min; ++i) {
-				int d = ufos[i * 3 + 1];
-				res[i] = d;
-				if (!u[d]) {
-					u[d] = true;
-					++a;
+			{
+				int fv[] = new int[f];
+				for (int i = 0; i < f; ++i) {
+					for (int j = 1; j < 3; ++j) {
+						if (u[ufos[i * 3 + j]]) continue;
+						fv[i] += 10 - j;
+					}
+				}
+				boolean up[] = new boolean[p];
+				boolean uf[] = new boolean[f];
+				for (int i = 0; i < p; ++i) {
+					int to = -1, v = Integer.MIN_VALUE;
+					for (int j = 0; j < f; ++j) {
+						if (uf[j]) continue;
+						if (ships[i] == ufos[j * 3] && v < fv[j]) {
+							v = fv[j];
+							to = j;
+						}
+					}
+					if (to != -1) {
+						uf[to] = true;
+						up[i] = true;
+						int d =  ufos[to * 3 + 1];
+						res[i] = d;
+						if (!u[d]) {
+							u[d] = true;
+							++a;
+						}
+					}
+				}
+				for (int i = 0; i < f; ++i) {
+					if (uf[i]) continue;
+					int ship = -1, v = Integer.MAX_VALUE;
+					for (int j = 0; j < p; ++j) {
+						if (up[j]) continue;
+						if (v > dist[ships[j]][ufos[i * 3 + 1]]) {
+							v = dist[ships[j]][ufos[i * 3 + 1]];
+							ship = j;
+						}
+					}
+					if (ship != -1) {
+						uf[i] = true;
+						up[ship] = true;
+						int d = ufos[i * 3 + 1];
+						res[ship] = d;
+						if (!u[d]) {
+							u[d] = true;
+							++a;
+						}
+					}
 				}
 			}
 			return res;
