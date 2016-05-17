@@ -4,6 +4,10 @@ import java.util.PriorityQueue;
 
 public class StarTraveller {
 
+	// submit時以外は適当に短く
+	private static final int MAX_TIME = 5000;
+	private final long endTime = System.currentTimeMillis() + MAX_TIME;
+
 	/*
 	 * a = 訪れたstar数
 	 * s = star数
@@ -130,91 +134,94 @@ public class StarTraveller {
 			}
 		}
 		int best[] = Arrays.copyOf(rev, rev.length), bv = v;
-		for (int roop = 0; roop < 0xffffff; ++roop) {
-			{
-				int i = ships.length + x.next(stars.length), j = x.next(now.length);
-				if (i == j || now[j] == i) continue;
-				int tv = v - dist[rev[i]][i] + dist[j][i];
-				if (now[i] != -1) {
-					tv += dist[rev[i]][now[i]] - dist[i][now[i]];
-				}
-				if (now[j] != -1) {
-					tv += dist[i][now[j]] - dist[j][now[j]];
-				}
-				if (v > tv) {
-					v = tv;
-					if (now[i] == -1) {
-						now[rev[i]] = -1;
-					} else {
-						now[rev[i]] = now[i];
-						rev[now[i]] = rev[i];
+		long remainTime = endTime - System.currentTimeMillis();
+		while (remainTime > 0) {
+			for (int roop = 0; roop < 0xffff; ++roop) {
+				move: {
+					int i = ships.length + x.next(stars.length), j = x.next(now.length);
+					if (i == j || now[j] == i) break move;
+					int tv = v - dist[rev[i]][i] + dist[j][i];
+					if (now[i] != -1) {
+						tv += dist[rev[i]][now[i]] - dist[i][now[i]];
 					}
-					if (now[j] == -1) {
-						now[i] = -1;
-					} else {
-						now[i] = now[j];
-						rev[now[j]] = i;
+					if (now[j] != -1) {
+						tv += dist[i][now[j]] - dist[j][now[j]];
 					}
-					now[j] = i;
-					rev[i] = j;
-				}
-			}
-			{
-				int i = ships.length + x.next(stars.length), j = ships.length + x.next(stars.length);
-				if (i == j || rev[i] == j || rev[j] == i) continue;
-				int a = i, b = j, as = 0, bs = 0;
-				while (rev[a] != -1) {
-					a = rev[a];
-					++as;
-				}
-				while (rev[b] != -1) {
-					b = rev[b];
-					++bs;
-				}
-				if (a == b) {
-					a = rev[i];
-					b = rev[j];
-					int tv = v - dist[a][i] - dist[b][j] + dist[i][j] + dist[a][b];
 					if (v > tv) {
 						v = tv;
-						if (as > bs) {
-							int t = rev[i], g = rev[j];
-							while (t != g) {
-								int n = rev[t];
-								int tmp = now[t];
-								now[t] = rev[t];
-								rev[t] = tmp;
-								t = n;
-							}
-							now[b] = a;
-							now[j] = i;
-							rev[a] = b;
-							rev[i] = j;
+						if (now[i] == -1) {
+							now[rev[i]] = -1;
 						} else {
-							int t = rev[j], g = rev[i];
-							while (t != g) {
-								int n = rev[t];
-								int tmp = now[t];
-								now[t] = rev[t];
-								rev[t] = tmp;
-								t = n;
-							}
-							now[a] = b;
-							now[i] = j;
-							rev[b] = a;
-							rev[j] = i;
+							now[rev[i]] = now[i];
+							rev[now[i]] = rev[i];
 						}
+						if (now[j] == -1) {
+							now[i] = -1;
+						} else {
+							now[i] = now[j];
+							rev[now[j]] = i;
+						}
+						now[j] = i;
+						rev[i] = j;
 					}
-				} else {
-					a = rev[i];
-					b = rev[j];
-					int tv = v - dist[a][i] - dist[b][j] + dist[b][i] + dist[a][j];
-					if (v > tv) {
-						v = tv;
-						now[a] = j;
-						now[b] = i;
-						rev[i] = b;
-						rev[j] = a;
+				}
+				move: {
+					int i = ships.length + x.next(stars.length), j = ships.length + x.next(stars.length);
+					if (i == j || rev[i] == j || rev[j] == i) break move;
+					int a = i, b = j, as = 0, bs = 0;
+					while (rev[a] != -1) {
+						a = rev[a];
+						++as;
+					}
+					while (rev[b] != -1) {
+						b = rev[b];
+						++bs;
+					}
+					if (a == b) {
+						a = rev[i];
+						b = rev[j];
+						int tv = v - dist[a][i] - dist[b][j] + dist[i][j] + dist[a][b];
+						if (v > tv) {
+							v = tv;
+							if (as > bs) {
+								int t = rev[i], g = rev[j];
+								while (t != g) {
+									int n = rev[t];
+									int tmp = now[t];
+									now[t] = rev[t];
+									rev[t] = tmp;
+									t = n;
+								}
+								now[b] = a;
+								now[j] = i;
+								rev[a] = b;
+								rev[i] = j;
+							} else {
+								int t = rev[j], g = rev[i];
+								while (t != g) {
+									int n = rev[t];
+									int tmp = now[t];
+									now[t] = rev[t];
+									rev[t] = tmp;
+									t = n;
+								}
+								now[a] = b;
+								now[i] = j;
+								rev[b] = a;
+								rev[j] = i;
+							}
+						}
+					} else {
+						a = rev[i];
+						b = rev[j];
+						int tv = v - dist[a][i] - dist[b][j] + dist[b][i] + dist[a][j];
+						if (v > tv) {
+							v = tv;
+							now[a] = j;
+							now[b] = i;
+							rev[i] = b;
+							rev[j] = a;
+						}
 					}
 				}
 			}
@@ -222,6 +229,7 @@ public class StarTraveller {
 				bv = v;
 				System.arraycopy(rev, 0, best, 0, rev.length);
 			}
+			remainTime = endTime - System.currentTimeMillis();
 		}
 		int[] res = new int[this.s];
 		Arrays.fill(res, -1);

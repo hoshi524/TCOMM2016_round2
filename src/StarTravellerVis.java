@@ -46,7 +46,7 @@ class Pnt {
 
 // ------------- class StarTraveller itself --------------
 public class StarTravellerVis {
-	final int SZ = 1024; // space size
+	static final int SZ = 1024; // space size
 	int NStar, NShip, NUfo; // number of stars, ships and ufo's
 	Pnt[] star; // coordinates of stars (fixed)
 	int[] ship; // Position of ships
@@ -56,9 +56,9 @@ public class StarTravellerVis {
 	double energy; // Energy used
 	int[] ufoRange; // Number of random stars selected for each ufo when determining next star
 	ArrayList<Integer> progress = new ArrayList<Integer>(); // Used to visualize path progress
-	public static int delay = 100;
-	public static boolean startPaused = true;
-	public static boolean drawUfo = true;
+	public final static int delay = 100;
+	public final static boolean startPaused = true;
+	public final static boolean drawUfo = true;
 	final Object worldLock = new Object();
 	SecureRandom rnd = null;
 
@@ -434,8 +434,6 @@ public class StarTravellerVis {
 			for (int i = 0; i < args.length; i++) {
 				if (args[i].equals("-save")) saveFile = args[++i];
 				if (args[i].equals("-vis")) vis = true;
-				if (args[i].equals("-delay")) delay = Integer.parseInt(args[++i]);
-				if (args[i].equals("-noufo")) drawUfo = false;
 			}
 			for (long seed = 1; seed <= 100; ++seed) {
 				long start = System.currentTimeMillis();
@@ -469,7 +467,7 @@ public class StarTravellerVis {
 		final int MAX_TIME = 20000;
 		final ParameterClass sum1 = new ParameterClass();
 		final ParameterClass sum2 = new ParameterClass();
-		ExecutorService es = Executors.newFixedThreadPool(4);
+		ExecutorService es = Executors.newFixedThreadPool(2);
 
 		for (int seed = 1, size = seed + 1000; seed < size; seed++) {
 			final int Seed = seed;
