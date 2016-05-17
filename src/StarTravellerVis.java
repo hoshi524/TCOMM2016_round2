@@ -430,12 +430,12 @@ public class StarTravellerVis {
 	// ---------------------------------------------------
 	public static void main(String[] args) {
 		if (false) {
-			vis = false;
+			vis = true;
 			for (int i = 0; i < args.length; i++) {
 				if (args[i].equals("-save")) saveFile = args[++i];
 				if (args[i].equals("-vis")) vis = true;
 			}
-			for (long seed = 1; seed <= 100; ++seed) {
+			for (long seed = 1; seed <= 1; ++seed) {
 				long start = System.currentTimeMillis();
 				double score = new StarTravellerVis().runTest(new Solver() {
 					StarTraveller solver = new StarTraveller();

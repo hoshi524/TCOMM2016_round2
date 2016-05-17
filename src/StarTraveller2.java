@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.PriorityQueue;
 
-public class StarTraveller {
+public class StarTraveller2 {
 
 	// submit時以外は適当に短く
 	private static final int MAX_TIME = 5000;
@@ -62,12 +62,7 @@ public class StarTraveller {
 				for (int i = 0; i < f; ++i) {
 					for (int j = 1; j < 3; ++j) {
 						if (u[ufos[i * 3 + j]]) continue;
-						fv[i] += 0xffffff * (3 - j);
-					}
-					int p = ufos[i * 3 + 2];
-					for (int j = 0; j < s; ++j) {
-						if (u[j]) continue;
-						fv[i] -= dist[p][j];
+						fv[i] += 10 - j;
 					}
 				}
 				boolean up[] = new boolean[p];
@@ -184,6 +179,10 @@ public class StarTraveller {
 		}
 		int best[] = Arrays.copyOf(rev, rev.length), bv = v;
 		long remainTime = endTime - System.currentTimeMillis();
+		long startTemp = 50;
+		long endTemp = 0;
+		long temp = startTemp + (endTemp - startTemp) * (MAX_TIME - remainTime) / MAX_TIME;
+		// TSPの性質か、焼きなましと山登りの差が無い
 		while (remainTime > 0) {
 			for (int roop = 0; roop < 0xffff; ++roop) {
 				move: {
@@ -196,7 +195,7 @@ public class StarTraveller {
 					if (now[j] != -1) {
 						tv += dist[i][now[j]] - dist[j][now[j]];
 					}
-					if (v > tv) {
+					if (v > tv || Math.exp((double) (v - tv) / temp) * 0xfffff > x.next(0xfffff)) {
 						v = tv;
 						if (now[i] == -1) {
 							now[rev[i]] = -1;
@@ -230,7 +229,7 @@ public class StarTraveller {
 						a = rev[i];
 						b = rev[j];
 						int tv = v - dist[a][i] - dist[b][j] + dist[i][j] + dist[a][b];
-						if (v > tv) {
+						if (v > tv || Math.exp((double) (v - tv) / temp) * 0xfffff > x.next(0xfffff)) {
 							v = tv;
 							if (as > bs) {
 								int t = rev[i], g = rev[j];
@@ -264,7 +263,7 @@ public class StarTraveller {
 						a = rev[i];
 						b = rev[j];
 						int tv = v - dist[a][i] - dist[b][j] + dist[b][i] + dist[a][j];
-						if (v > tv) {
+						if (v > tv || Math.exp((double) (v - tv) / temp) * 0xfffff > x.next(0xfffff)) {
 							v = tv;
 							now[a] = j;
 							now[b] = i;
@@ -279,6 +278,7 @@ public class StarTraveller {
 				System.arraycopy(rev, 0, best, 0, rev.length);
 			}
 			remainTime = endTime - System.currentTimeMillis();
+			temp = startTemp + (endTemp - startTemp) * (MAX_TIME - remainTime) / MAX_TIME;
 		}
 		int[] res = new int[this.s];
 		Arrays.fill(res, -1);
