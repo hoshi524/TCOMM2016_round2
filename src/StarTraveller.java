@@ -17,11 +17,12 @@ public class StarTraveller {
 	 * f = ufo数
 	 */
 
-	int a, s, p, t, f, maxt, dist[][];
+	int a, s, p, t, f, maxt, dist[][], stars[];
 	boolean[] u;
 	MinCostFlow flow;
 
 	public int init(int[] stars) {
+		this.stars = stars;
 		s = stars.length / 2;
 		u = new boolean[s];
 		t = 0;
@@ -119,6 +120,7 @@ public class StarTraveller {
 					}
 				}
 				search = search(ships, stars);
+				// Visual.visual(this.stars, search);
 			}
 			for (int i = 0; i < p; ++i) {
 				for (int t = 0; t < s; ++t) {
