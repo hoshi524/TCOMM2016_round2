@@ -5,7 +5,7 @@ import java.util.PriorityQueue;
 public class StarTraveller {
 
 	// submit時以外は適当に短く
-	private static final int MAX_TIME = 5000;
+	private static final int MAX_TIME = 4000;
 	private final long endTime = System.currentTimeMillis() + MAX_TIME;
 
 	/*
