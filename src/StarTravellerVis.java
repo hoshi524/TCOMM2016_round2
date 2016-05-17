@@ -1,3 +1,4 @@
+
 /*
 Change Log:
 2016-05-11 : Intial release
@@ -105,7 +106,8 @@ public class StarTravellerVis {
 			ufoParm = new int[3 * NUfo];
 			starParm = new int[2 * NStar];
 
-			if (vis) System.out.println("seed  = " + seed + " NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
+			if (vis)
+				System.out.println("seed  = " + seed + " NStar = " + NStar + " NShip = " + NShip + " NUfo = " + NUfo + " NGalaxy = " + NG);
 
 			// Generate stars
 			// Generate galaxy center positions
@@ -184,12 +186,14 @@ public class StarTravellerVis {
 				}
 				// move ship
 				if (ret.length != NShip) {
-					addFatalError("Move #" + turns + ": Return should have one move for each ship. Length is " + ret.length + " and should be " + NShip + ".");
+					addFatalError("Move #" + turns + ": Return should have one move for each ship. Length is " + ret.length
+							+ " and should be " + NShip + ".");
 					return -1.0;
 				}
 				for (int i = 0; i < NShip; i++) {
 					if (ret[i] < 0 || ret[i] >= NStar) {
-						addFatalError("Move #" + turns + ": Return values should in the range of [0," + (NStar - 1) + "]. Your value was " + ret[i] + ".");
+						addFatalError("Move #" + turns + ": Return values should in the range of [0," + (NStar - 1) + "]. Your value was "
+								+ ret[i] + ".");
 						return -1.0;
 					}
 					synchronized (worldLock) {
@@ -322,7 +326,8 @@ public class StarTravellerVis {
 					g2.fillOval(star[ufoParm[i * 3]].x - 3, star[ufoParm[i * 3]].y - 3, 7, 7);
 					g2.drawLine(star[ufoParm[i * 3]].x, star[ufoParm[i * 3]].y, star[ufoParm[i * 3 + 1]].x, star[ufoParm[i * 3 + 1]].y);
 					g2.setColor(new Color(0.5f, 0.5f, 0));
-					g2.drawLine(star[ufoParm[i * 3 + 1]].x, star[ufoParm[i * 3 + 1]].y, star[ufoParm[i * 3 + 2]].x, star[ufoParm[i * 3 + 2]].y);
+					g2.drawLine(star[ufoParm[i * 3 + 1]].x, star[ufoParm[i * 3 + 1]].y, star[ufoParm[i * 3 + 2]].x,
+							star[ufoParm[i * 3 + 2]].y);
 				}
 			}
 			// draw ships
@@ -511,8 +516,10 @@ public class StarTravellerVis {
 					sum2.d += score2 / Math.max(score1, score2);
 
 					double max = Math.max(sum1.d, sum2.d);
-					System.err.println(String.format("Seed : %3d  %.2f : %.2f  %8.2f : %8.2f  %5d : %5d", Seed, sum1.d / max, sum2.d / max, score1, score2,
-							time1, time2));
+					StarTravellerVis data = new StarTravellerVis();
+					data.generate(Seed);
+					System.err.println(String.format("%3d  %.2f : %.2f  %8.2f : %8.2f  %5d : %5d  %4d  %2d  %2d", Seed, sum1.d / max,
+							sum2.d / max, score1, score2, time1, time2, data.NStar, data.NShip, data.NUfo));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
