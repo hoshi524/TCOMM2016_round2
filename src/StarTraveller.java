@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.PriorityQueue;
 
 public class StarTraveller {
 
@@ -17,6 +19,7 @@ public class StarTraveller {
 
 	int a, s, p, t, f, maxt, dist[][];
 	boolean[] u;
+	MinCostFlow flow;
 
 	public int init(int[] stars) {
 		s = stars.length / 2;
@@ -50,7 +53,25 @@ public class StarTraveller {
 			}
 			f = ufos.length / 3;
 			p = ships.length;
+			flow = new MinCostFlow(p + s + 2);
 			return ships;
+		} else if (f > 0 && t == 2) {
+			int[] res = Arrays.copyOf(ships, ships.length);
+			int[] stars = new int[f];
+			for (int i = 0; i < f; ++i) {
+				stars[i] = ufos[i * 3 + 1];
+			}
+			int[] go = flow.matching(dist, ships, stars);
+			for (int i = 0; i < p; ++i) {
+				if (go[i] != -1) {
+					res[i] = go[i];
+					if (!u[go[i]]) {
+						u[go[i]] = true;
+						++a;
+					}
+				}
+			}
+			return res;
 		} else if (f > 0 && (s - a) < (maxt - t)) {
 			int[] res = Arrays.copyOf(ships, ships.length);
 			{
@@ -66,7 +87,6 @@ public class StarTraveller {
 						fv[i] -= dist[p][j];
 					}
 				}
-				boolean up[] = new boolean[p];
 				boolean uf[] = new boolean[f];
 				for (int i = 0; i < p; ++i) {
 					int to = -1, v = Integer.MIN_VALUE;
@@ -79,30 +99,8 @@ public class StarTraveller {
 					}
 					if (to != -1) {
 						uf[to] = true;
-						up[i] = true;
 						int d =  ufos[to * 3 + 1];
 						res[i] = d;
-						if (!u[d]) {
-							u[d] = true;
-							++a;
-						}
-					}
-				}
-				for (int i = 0; i < f; ++i) {
-					if (uf[i]) continue;
-					int ship = -1, v = Integer.MAX_VALUE;
-					for (int j = 0; j < p; ++j) {
-						if (up[j]) continue;
-						if (v > dist[ships[j]][ufos[i * 3 + 1]]) {
-							v = dist[ships[j]][ufos[i * 3 + 1]];
-							ship = j;
-						}
-					}
-					if (ship != -1) {
-						uf[i] = true;
-						up[ship] = true;
-						int d = ufos[i * 3 + 1];
-						res[ship] = d;
 						if (!u[d]) {
 							u[d] = true;
 							++a;
@@ -282,6 +280,129 @@ public class StarTraveller {
 			if (best[i] != -1) res[trans[i]] = trans[best[i]];
 		}
 		return res;
+	}
+
+	private class MinCostFlow {
+		class edge {
+			int to, cap, cost, rev;
+
+			edge(int to, int cap, int cost, int rev) {
+				this.to = to;
+				this.cap = cap;
+				this.cost = cost;
+				this.rev = rev;
+			}
+		}
+
+		int V;
+		ArrayList<edge> G[];
+		int h[];
+		int dist[];
+		int prevv[], preve[];
+		int go[];
+
+		public MinCostFlow(int V) {
+			this.V = V;
+			G = new ArrayList[V];
+			for (int i = 0; i < V; i++)
+				G[i] = new ArrayList<edge>();
+			h = new int[V];
+			dist = new int[V];
+			prevv = new int[V];
+			preve = new int[V];
+			go = new int[V];
+		}
+
+		void add_edge(int from, int to, int cap, int cost) {
+			G[from].add(new edge(to, cap, cost, G[to].size()));
+			G[to].add(new edge(from, 0, -cost, G[from].size() - 1));
+		}
+
+		int min_cost_flow(int s, int t, int f) {
+			class pair implements Comparable<pair> {
+				final int dist, v;
+
+				pair(int dist, int v) {
+					this.dist = dist;
+					this.v = v;
+				}
+
+				@Override
+				public int compareTo(pair paramT) {
+					return dist - paramT.dist;
+				}
+			}
+			int res = 0;
+			Arrays.fill(h, 0);
+			Arrays.fill(go, -1);
+			PriorityQueue<pair> queue = new PriorityQueue<pair>();
+			while (f > 0) {
+				Arrays.fill(dist, Integer.MAX_VALUE);
+				dist[s] = 0;
+				queue.add(new pair(0, s));
+				while (!queue.isEmpty()) {
+					pair p = queue.poll();
+					int v = p.v;
+					if (dist[v] < p.dist) continue;
+					for (int i = 0; i < G[v].size(); ++i) {
+						edge e = G[v].get(i);
+						if (e.cap == 0) continue;
+						int d = dist[v] + e.cost + h[v] - h[e.to];
+						if (dist[e.to] > d) {
+							dist[e.to] = d;
+							prevv[e.to] = v;
+							preve[e.to] = i;
+							queue.add(new pair(d, e.to));
+						}
+					}
+				}
+				if (dist[t] == Integer.MAX_VALUE) return -1;
+				for (int v = 0; v < V; ++v) {
+					h[v] += dist[v];
+				}
+				int d = f;
+				for (int v = t; v != s; v = prevv[v]) {
+					d = Math.min(d, G[prevv[v]].get(preve[v]).cap);
+				}
+				f -= d;
+				res += d * h[t];
+				for (int v = t; v != s; v = prevv[v]) {
+					edge e = G[prevv[v]].get(preve[v]);
+					go[prevv[v]] = v;
+					e.cap -= d;
+					G[v].get(e.rev).cap += d;
+				}
+			}
+			return res;
+		}
+
+		int[] matching(int[][] dist, int[] ships, int[] stars) {
+			V = ships.length + stars.length + 2;
+			int source = V - 2, think = V - 1;
+			for (int i = 0; i < V; ++i) {
+				G[i].clear();
+			}
+			for (int i = 0; i < ships.length; ++i) {
+				add_edge(source, i, 1, 0);
+			}
+			for (int i = 0; i < stars.length; ++i) {
+				add_edge(p + i, think, 1, 0);
+			}
+			for (int i = 0; i < ships.length; ++i) {
+				for (int j = 0; j < stars.length; ++j) {
+					add_edge(i, ships.length + j, 1, dist[ships[i]][stars[j]]);
+				}
+			}
+			min_cost_flow(source, think, Math.min(ships.length, stars.length));
+			int res[] = new int[ships.length];
+			Arrays.fill(res, -1);
+			for (int i = 0; i < ships.length; ++i) {
+				if (go[i] != -1) {
+					res[i] = stars[go[i] - ships.length];
+				}
+			}
+			return res;
+		}
 	}
 
 	private class XorShift {
