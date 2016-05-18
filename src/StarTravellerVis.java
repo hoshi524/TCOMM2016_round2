@@ -497,7 +497,7 @@ public class StarTravellerVis {
 					if (time1 > MAX_TIME) sum1.timeover++;
 					long time2 = System.currentTimeMillis();
 					double score2 = new StarTravellerVis().runTest(new Solver() {
-						StarTraveller1 solver = new StarTraveller1();
+						StarTraveller2 solver = new StarTraveller2();
 
 						@Override
 						public int init(int[] stars) {
