@@ -19,3 +19,10 @@ turn制限まで載っかるだけ
 TSPって典型過ぎて成熟してそうだけど、良い解法知らない
 https://en.wikipedia.org/wiki/Travelling_salesman_problem
 とか読まないと...?
+
+焼きなましは効果無さそう
+1%しか改善しない
+
+k-opt heuristicが有効そう
+http://www.geocities.jp/m_hiroi/light/pyalgo64.html
+3%程度は改善するのでは
