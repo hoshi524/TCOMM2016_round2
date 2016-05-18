@@ -145,8 +145,8 @@ public class StarTraveller {
 				dist[i][j] = this.dist[trans[i]][trans[j]];
 			}
 		}
-		int now[] = new int[S], v = 0, rev[] = new int[S];
-		Arrays.fill(now, -1);
+		int nex[] = new int[S], v = 0, rev[] = new int[S];
+		Arrays.fill(nex, -1);
 		Arrays.fill(rev, -1);
 		{
 			int remain[] = new int[S], ri = 0;
@@ -170,7 +170,7 @@ public class StarTraveller {
 						}
 					}
 				}
-				now[target[to]] = remain[from];
+				nex[target[to]] = remain[from];
 				rev[remain[from]] = target[to];
 				v += d;
 				target[to] = remain[from];
@@ -181,131 +181,146 @@ public class StarTraveller {
 		BitSet set = new BitSet(S);
 		while (endTime > System.currentTimeMillis()) {
 			for (int roop = 0; roop < 0xffff; ++roop) {
-				move: {
-					int i = ships.length + x.next(stars.length), j = x.next(S);
-					if (i == j || now[j] == i) break move;
-					int tv = v - dist[rev[i]][i] + dist[j][i];
-					if (now[i] != -1) {
-						tv += dist[rev[i]][now[i]] - dist[i][now[i]];
-					}
-					if (now[j] != -1) {
-						tv += dist[i][now[j]] - dist[j][now[j]];
-					}
-					if (v > tv) {
-						v = tv;
-						if (now[i] == -1) {
-							now[rev[i]] = -1;
-						} else {
-							now[rev[i]] = now[i];
-							rev[now[i]] = rev[i];
-						}
-						if (now[j] == -1) {
-							now[i] = -1;
-						} else {
-							now[i] = now[j];
-							rev[now[j]] = i;
-						}
-						now[j] = i;
-						rev[i] = j;
-					}
-				}
+				//				move: {
+				//					int i = ships.length + x.next(stars.length), j = x.next(S);
+				//					if (i == j || nex[j] == i) break move;
+				//					int tv = v - dist[rev[i]][i] + dist[j][i];
+				//					if (nex[i] != -1) {
+				//						tv += dist[rev[i]][nex[i]] - dist[i][nex[i]];
+				//					}
+				//					if (nex[j] != -1) {
+				//						tv += dist[i][nex[j]] - dist[j][nex[j]];
+				//					}
+				//					if (v > tv) {
+				//						v = tv;
+				//						if (nex[i] == -1) {
+				//							nex[rev[i]] = -1;
+				//						} else {
+				//							nex[rev[i]] = nex[i];
+				//							rev[nex[i]] = rev[i];
+				//						}
+				//						if (nex[j] == -1) {
+				//							nex[i] = -1;
+				//						} else {
+				//							nex[i] = nex[j];
+				//							rev[nex[j]] = i;
+				//						}
+				//						nex[j] = i;
+				//						rev[i] = j;
+				//					}
+				//				}
 				{
 					// TODO
 					int i = ships.length + x.next(stars.length), buf[] = new int[S], bi = 0;
-					buf[bi++] = i;
-					while (now[i] != -1) {
-						buf[bi++] = i = now[i];
+					{
+						int t = i;
+						buf[bi++] = t;
+						while (nex[t] != -1) {
+							if (bi >= buf.length) throw new RuntimeException();
+							buf[bi++] = nex[t];
+							t = nex[t];
+						}
 					}
 					int j = buf[x.next(bi)];
 					set.clear();
-					for (int k = i; k != j; k = now[k]) {
+					for (int k = i; k != j; k = nex[k]) {
 						set.set(k);
 					}
 					set.set(j);
 					int k = x.next(S);
-					while (set.get(k))
+					while (set.get(k)) {
 						k = x.next(S);
+					}
 					int tv = v - dist[rev[i]][i];
-					if (now[j] != -1) tv += dist[rev[i]][now[j]] - dist[j][now[j]];
-					if (now[k] == -1) {
+					if (nex[j] != -1) {
+						tv += dist[rev[i]][nex[j]] - dist[j][nex[j]];
+					}
+					if (nex[k] == -1) {
 						tv += Math.min(dist[k][i], dist[k][j]);
 					} else {
-						tv += Math.min(dist[k][i] + dist[now[k]][j], dist[k][j] + dist[now[k]][i]) - dist[k][now[k]];
+						tv += Math.min(dist[k][i] + dist[nex[k]][j], dist[k][j] + dist[nex[k]][i]) - dist[k][nex[k]];
 					}
 					if (v > tv) {
 						v = tv;
-						if (now[j] == -1) {
-							now[rev[i]] = -1;
+						if (nex[j] == -1) {
+							nex[rev[i]] = -1;
 						} else {
-							now[rev[i]] = now[j];
-							rev[now[j]] = rev[i];
+							nex[rev[i]] = nex[j];
+							rev[nex[j]] = rev[i];
 						}
-						if (now[k] == -1) {
-
-						} else {
-
-						}
-					}
-				}
-				move: {
-					int i = ships.length + x.next(stars.length), j = ships.length + x.next(stars.length);
-					if (i == j || rev[i] == j || rev[j] == i) break move;
-					int a = i, b = j, as = 0, bs = 0;
-					while (rev[a] != -1) {
-						a = rev[a];
-						++as;
-					}
-					while (rev[b] != -1) {
-						b = rev[b];
-						++bs;
-					}
-					if (a == b) {
-						a = rev[i];
-						b = rev[j];
-						int tv = v - dist[a][i] - dist[b][j] + dist[i][j] + dist[a][b];
-						if (v > tv) {
-							v = tv;
-							if (as > bs) {
-								int t = rev[i], g = rev[j];
-								while (t != g) {
-									int n = rev[t];
-									int tmp = now[t];
-									now[t] = rev[t];
-									rev[t] = tmp;
-									t = n;
-								}
-								now[b] = a;
-								now[j] = i;
-								rev[a] = b;
-								rev[i] = j;
+						if (nex[k] == -1) {
+							if (dist[k][i] <= dist[k][j]) {
+								nex[k] = i;
+								rev[i] = k;
+								nex[j] = -1;
 							} else {
-								int t = rev[j], g = rev[i];
-								while (t != g) {
-									int n = rev[t];
-									int tmp = now[t];
-									now[t] = rev[t];
-									rev[t] = tmp;
-									t = n;
-								}
-								now[a] = b;
-								now[i] = j;
-								rev[b] = a;
-								rev[j] = i;
+								reverse(i, j, nex, rev);
+								nex[k] = j;
+								rev[j] = k;
+								nex[i] = -1;
+							}
+						} else {
+							int m = nex[k];
+							if (dist[k][i] + dist[m][j] <= dist[k][j] + dist[m][i]) {
+								nex[k] = i;
+								rev[i] = k;
+								nex[j] = m;
+								rev[m] = j;
+							} else {
+								reverse(i, j, nex, rev);
+								nex[k] = j;
+								rev[j] = k;
+								nex[i] = m;
+								rev[m] = i;
 							}
 						}
-					} else {
-						a = rev[i];
-						b = rev[j];
-						int tv = v - dist[a][i] - dist[b][j] + dist[b][i] + dist[a][j];
-						if (v > tv) {
-							v = tv;
-							now[a] = j;
-							now[b] = i;
-							rev[i] = b;
-							rev[j] = a;
-						}
 					}
 				}
+				//				move: {
+				//					int i = ships.length + x.next(stars.length), j = ships.length + x.next(stars.length);
+				//					if (i == j || rev[i] == j || rev[j] == i) break move;
+				//					int a = i, b = j, as = 0, bs = 0;
+				//					while (rev[a] != -1) {
+				//						a = rev[a];
+				//						++as;
+				//					}
+				//					while (rev[b] != -1) {
+				//						b = rev[b];
+				//						++bs;
+				//					}
+				//					if (a == b) {
+				//						a = rev[i];
+				//						b = rev[j];
+				//						int tv = v - dist[a][i] - dist[b][j] + dist[i][j] + dist[a][b];
+				//						if (v > tv) {
+				//							v = tv;
+				//							if (as > bs) {
+				//								reverse(rev[i], rev[j], rev, nex);
+				//								nex[b] = a;
+				//								nex[j] = i;
+				//								rev[a] = b;
+				//								rev[i] = j;
+				//							} else {
+				//								reverse(rev[j], rev[i], rev, nex);
+				//								nex[a] = b;
+				//								nex[i] = j;
+				//								rev[b] = a;
+				//								rev[j] = i;
+				//							}
+				//						}
+				//					} else {
+				//						a = rev[i];
+				//						b = rev[j];
+				//						int tv = v - dist[a][i] - dist[b][j] + dist[b][i] + dist[a][j];
+				//						if (v > tv) {
+				//							v = tv;
+				//							nex[a] = j;
+				//							nex[b] = i;
+				//							rev[i] = b;
+				//							rev[j] = a;
+				//						}
+				//					}
+				//				}
 			}
 		}
 		int[] res = new int[this.s];
@@ -314,6 +329,16 @@ public class StarTraveller {
 			if (rev[i] != -1) res[trans[i]] = trans[rev[i]];
 		}
 		return res;
+	}
+
+	void reverse(int from, int to, int next[], int rev[]) {
+		while (from != to) {
+			int n = next[from];
+			int t = next[from];
+			next[from] = rev[from];
+			rev[from] = t;
+			from = n;
+		}
 	}
 
 	private class MinCostFlow {
