@@ -1,12 +1,11 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.PriorityQueue;
 
 public class StarTraveller {
 
 	// submit時以外は適当に短く
-	private static final int MAX_TIME = 10000;
+	private static final int MAX_TIME = 15000;
 	private final long endTime = System.currentTimeMillis() + MAX_TIME;
 
 	/*
@@ -177,84 +176,68 @@ public class StarTraveller {
 				remain[from] = remain[--ri];
 			}
 		}
-		XorShift x = new XorShift();
-		BitSet set = new BitSet(S);
-		int buf[] = new int[S], bi = 0;
-		while (endTime > System.currentTimeMillis()) {
-			for (int roop = 0; roop < 0xffff; ++roop) {
-				move: {
-					int i = ships.length + x.next(stars.length);
-					{
-						bi = 0;
-						int t = i;
-						buf[bi++] = t;
-						while (nex[t] != -1) {
-							buf[bi++] = nex[t];
-							t = nex[t];
-						}
-					}
-					int j = buf[x.next(bi)];
-					set.clear();
-					for (int k = i; k != j; k = nex[k]) {
-						set.set(k);
-					}
-					set.set(rev[i]);
-					set.set(j);
-					bi = 0;
-					for (int t = 0; t < S; ++t) {
-						if (set.get(t)) continue;
-						buf[bi++] = t;
-					}
-					if (bi == 0) break move;
-					int k = buf[x.next(bi)];
-					int tv = v - dist[rev[i]][i];
-					if (nex[j] != -1) {
-						tv += dist[rev[i]][nex[j]] - dist[j][nex[j]];
-					}
-					if (nex[k] == -1) {
-						tv += Math.min(dist[k][i], dist[k][j]);
-					} else {
-						tv += Math.min(dist[k][i] + dist[nex[k]][j], dist[k][j] + dist[nex[k]][i]) - dist[k][nex[k]];
-					}
-					if (v > tv) {
-						v = tv;
-						if (nex[j] == -1) {
-							nex[rev[i]] = -1;
-						} else {
-							nex[rev[i]] = nex[j];
-							rev[nex[j]] = rev[i];
+		boolean update = true;
+		while (update && endTime > System.currentTimeMillis()) {
+			update = false;
+			move: for (int i = ships.length; i < S; ++i) {
+				boolean use[] = new boolean[S];
+				use[rev[i]] = true;
+				for (int j = i; j != -1; j = nex[j]) {
+					use[j] = true;
+					for (int k = 0; k < S; ++k) {
+						if (use[k]) continue;
+						int tv = v - dist[rev[i]][i];
+						if (nex[j] != -1) {
+							tv += dist[rev[i]][nex[j]] - dist[j][nex[j]];
 						}
 						if (nex[k] == -1) {
-							if (dist[k][i] <= dist[k][j]) {
-								nex[k] = i;
-								rev[i] = k;
-								nex[j] = -1;
-							} else {
-								reverse(i, j, nex, rev);
-								nex[k] = j;
-								rev[j] = k;
-								nex[i] = -1;
-							}
+							tv += Math.min(dist[k][i], dist[k][j]);
 						} else {
-							int m = nex[k];
-							if (dist[k][i] + dist[j][m] <= dist[k][j] + dist[i][m]) {
-								nex[k] = i;
-								rev[i] = k;
-								nex[j] = m;
-								rev[m] = j;
+							tv += Math.min(dist[k][i] + dist[nex[k]][j], dist[k][j] + dist[nex[k]][i]) - dist[k][nex[k]];
+						}
+						if (v > tv) {
+							v = tv;
+							update = true;
+							if (nex[j] == -1) {
+								nex[rev[i]] = -1;
 							} else {
-								reverse(i, j, nex, rev);
-								nex[k] = j;
-								rev[j] = k;
-								nex[i] = m;
-								rev[m] = i;
+								nex[rev[i]] = nex[j];
+								rev[nex[j]] = rev[i];
 							}
+							if (nex[k] == -1) {
+								if (dist[k][i] <= dist[k][j]) {
+									nex[k] = i;
+									rev[i] = k;
+									nex[j] = -1;
+								} else {
+									reverse(i, j, nex, rev);
+									nex[k] = j;
+									rev[j] = k;
+									nex[i] = -1;
+								}
+							} else {
+								int m = nex[k];
+								if (dist[k][i] + dist[j][m] <= dist[k][j] + dist[i][m]) {
+									nex[k] = i;
+									rev[i] = k;
+									nex[j] = m;
+									rev[m] = j;
+								} else {
+									reverse(i, j, nex, rev);
+									nex[k] = j;
+									rev[j] = k;
+									nex[i] = m;
+									rev[m] = i;
+								}
+							}
+							break move;
 						}
 					}
 				}
-				move: {
-					int i = ships.length + x.next(stars.length), j = ships.length + x.next(stars.length);
-					if (i == j || rev[i] == j || rev[j] == i) break move;
+			}
+			for (int i = ships.length; i < S; ++i) {
+				for (int j = ships.length; j < S; ++j) {
+					if (i == j || rev[i] == j || rev[j] == i) continue;
 					int a = i, b = j, as = 0, bs = 0;
 					while (rev[a] != -1) {
 						a = rev[a];
@@ -270,6 +253,7 @@ public class StarTraveller {
 						int tv = v - dist[a][i] - dist[b][j] + dist[i][j] + dist[a][b];
 						if (v > tv) {
 							v = tv;
+							update = true;
 							if (as > bs) {
 								reverse(rev[i], j, rev, nex);
 								nex[b] = a;
@@ -290,6 +274,7 @@ public class StarTraveller {
 						int tv = v - dist[a][i] - dist[b][j] + dist[b][i] + dist[a][j];
 						if (v > tv) {
 							v = tv;
+							update = true;
 							nex[a] = j;
 							nex[b] = i;
 							rev[i] = b;
@@ -299,7 +284,7 @@ public class StarTraveller {
 				}
 			}
 		}
-		if (true) {
+		if (false) {
 			int tv = 0;
 			for (int i = 0; i < S; ++i) {
 				if (nex[i] == -1) continue;
