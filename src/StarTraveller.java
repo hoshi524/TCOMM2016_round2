@@ -136,22 +136,20 @@ public class StarTraveller {
 	}
 
 	int[] search(int[] ships, int[] stars) {
-		int now[] = new int[ships.length + stars.length], v = 0, rev[] = new int[now.length];
-		int dist[][] = new int[now.length][now.length];
-		int trans[] = new int[now.length];
+		int S = ships.length + stars.length, trans[] = new int[S], dist[][] = new int[S][S];
 		System.arraycopy(ships, 0, trans, 0, ships.length);
 		System.arraycopy(stars, 0, trans, ships.length, stars.length);
-		for (int i = 0; i < now.length; ++i) {
-			for (int j = 0; j < now.length; ++j) {
+		for (int i = 0; i < S; ++i) {
+			for (int j = 0; j < S; ++j) {
 				dist[i][j] = this.dist[trans[i]][trans[j]];
 			}
 		}
+		int now[] = new int[S], v = 0, rev[] = new int[S];
 		Arrays.fill(now, -1);
 		Arrays.fill(rev, -1);
-		XorShift x = new XorShift();
 		{
-			int remain[] = new int[now.length], ri = 0;
-			int target[] = new int[now.length], ti = 0;
+			int remain[] = new int[S], ri = 0;
+			int target[] = new int[S], ti = 0;
 			for (ri = 0; ri < stars.length; ++ri) {
 				remain[ri] = ships.length + ri;
 			}
@@ -178,12 +176,11 @@ public class StarTraveller {
 				remain[from] = remain[--ri];
 			}
 		}
-		int best[] = Arrays.copyOf(rev, rev.length), bv = v;
-		long remainTime = endTime - System.currentTimeMillis();
-		while (remainTime > 0) {
+		XorShift x = new XorShift();
+		while (endTime > System.currentTimeMillis()) {
 			for (int roop = 0; roop < 0xffff; ++roop) {
 				move: {
-					int i = ships.length + x.next(stars.length), j = x.next(now.length);
+					int i = ships.length + x.next(stars.length), j = x.next(S);
 					if (i == j || now[j] == i) break move;
 					int tv = v - dist[rev[i]][i] + dist[j][i];
 					if (now[i] != -1) {
@@ -209,6 +206,9 @@ public class StarTraveller {
 						now[j] = i;
 						rev[i] = j;
 					}
+				}
+				{
+					// TODO
 				}
 				move: {
 					int i = ships.length + x.next(stars.length), j = ships.length + x.next(stars.length);
@@ -270,16 +270,11 @@ public class StarTraveller {
 					}
 				}
 			}
-			if (bv > v) {
-				bv = v;
-				System.arraycopy(rev, 0, best, 0, rev.length);
-			}
-			remainTime = endTime - System.currentTimeMillis();
 		}
 		int[] res = new int[this.s];
 		Arrays.fill(res, -1);
-		for (int i = 0; i < best.length; ++i) {
-			if (best[i] != -1) res[trans[i]] = trans[best[i]];
+		for (int i = 0; i < S; ++i) {
+			if (rev[i] != -1) res[trans[i]] = trans[rev[i]];
 		}
 		return res;
 	}
