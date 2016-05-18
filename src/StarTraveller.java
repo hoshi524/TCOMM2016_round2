@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.PriorityQueue;
 
 public class StarTraveller {
@@ -177,6 +178,7 @@ public class StarTraveller {
 			}
 		}
 		XorShift x = new XorShift();
+		BitSet set = new BitSet(S);
 		while (endTime > System.currentTimeMillis()) {
 			for (int roop = 0; roop < 0xffff; ++roop) {
 				move: {
@@ -209,6 +211,41 @@ public class StarTraveller {
 				}
 				{
 					// TODO
+					int i = ships.length + x.next(stars.length), buf[] = new int[S], bi = 0;
+					buf[bi++] = i;
+					while (now[i] != -1) {
+						buf[bi++] = i = now[i];
+					}
+					int j = buf[x.next(bi)];
+					set.clear();
+					for (int k = i; k != j; k = now[k]) {
+						set.set(k);
+					}
+					set.set(j);
+					int k = x.next(S);
+					while (set.get(k))
+						k = x.next(S);
+					int tv = v - dist[rev[i]][i];
+					if (now[j] != -1) tv += dist[rev[i]][now[j]] - dist[j][now[j]];
+					if (now[k] == -1) {
+						tv += Math.min(dist[k][i], dist[k][j]);
+					} else {
+						tv += Math.min(dist[k][i] + dist[now[k]][j], dist[k][j] + dist[now[k]][i]) - dist[k][now[k]];
+					}
+					if (v > tv) {
+						v = tv;
+						if (now[j] == -1) {
+							now[rev[i]] = -1;
+						} else {
+							now[rev[i]] = now[j];
+							rev[now[j]] = rev[i];
+						}
+						if (now[k] == -1) {
+
+						} else {
+
+						}
+					}
 				}
 				move: {
 					int i = ships.length + x.next(stars.length), j = ships.length + x.next(stars.length);
