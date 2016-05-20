@@ -71,7 +71,7 @@ public class StarTravellerVis {
 			// Pick [range] random stars and select the nearest one to travel to.
 			for (int j = 0; j < ufoRange[i]; j++) {
 				int p = rnd.nextInt(NStar);
-				int dst = dist(star[p].x - star[from].x, star[p].y - star[from].y);
+				int dst = (star[p].x - star[from].x) * (star[p].x - star[from].x) + (star[p].y - star[from].y) * (star[p].y - star[from].y);
 				if (dst < bdst && dst > 0) {
 					bdst = dst;
 					bj = p;
@@ -195,7 +195,9 @@ public class StarTravellerVis {
 					synchronized (worldLock) {
 						// only add energy if the ship actually moved in space
 						if (star[ship[i]].x != star[ret[i]].x || star[ship[i]].y != star[ret[i]].y) {
-							double dst = Math.sqrt(dist(star[ship[i]].x - star[ret[i]].x, star[ship[i]].y - star[ret[i]].y));
+							double dst = (double) (star[ship[i]].x - star[ret[i]].x) * (star[ship[i]].x - star[ret[i]].x);
+							dst += (double) (star[ship[i]].y - star[ret[i]].y) * (star[ship[i]].y - star[ret[i]].y);
+							dst = Math.sqrt(dst);
 							progress.add(ship[i]); // for visualization only
 							progress.add(ret[i]); // for visualization only
 							// Flying with ufo ?
@@ -435,7 +437,7 @@ public class StarTravellerVis {
 				if (args[i].equals("-save")) saveFile = args[++i];
 				if (args[i].equals("-vis")) vis = true;
 			}
-			for (long seed = 1; seed <= 10; ++seed) {
+			for (long seed = 1; seed <= 100; ++seed) {
 				long start = System.currentTimeMillis();
 				double score = new StarTravellerVis().runTest(new Solver() {
 					StarTraveller solver = new StarTraveller();
@@ -467,7 +469,7 @@ public class StarTravellerVis {
 		final int MAX_TIME = 20000;
 		final ParameterClass sum1 = new ParameterClass();
 		final ParameterClass sum2 = new ParameterClass();
-		ExecutorService es = Executors.newFixedThreadPool(4);
+		ExecutorService es = Executors.newFixedThreadPool(2);
 
 		for (int seed = 1, size = seed + 1000; seed < size; seed++) {
 			final int Seed = seed;
@@ -507,9 +509,10 @@ public class StarTravellerVis {
 					time2 = System.currentTimeMillis() - time2;
 					++sum2.c;
 					if (time2 > MAX_TIME) sum2.timeover++;
-					sum1.d += score1 / Math.max(score1, score2);
-					sum2.d += score2 / Math.max(score1, score2);
-
+					if (score1 > 0 && score2 > 0) {
+						sum1.d += score1 / Math.max(score1, score2);
+						sum2.d += score2 / Math.max(score1, score2);
+					}
 					double max = Math.max(sum1.d, sum2.d);
 					StarTravellerVis data = new StarTravellerVis();
 					data.generate(Seed);
