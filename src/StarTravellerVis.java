@@ -516,8 +516,8 @@ public class StarTravellerVis {
 					double max = Math.max(sum1.d, sum2.d);
 					StarTravellerVis data = new StarTravellerVis();
 					data.generate(Seed);
-					System.err.println(String.format("%3d  %.2f : %.2f  %8.2f : %8.2f  %5d : %5d  %4d  %2d  %2d", Seed, sum1.d / max, sum2.d / max, score1,
-							score2, time1, time2, data.NStar, data.NShip, data.NUfo));
+					System.err.println(String.format("%3d  %.3f : %.3f  %8.2f : %8.2f  %5d : %5d  %4d  %2d  %2d", Seed, sum1.d / max,
+							sum2.d / max, score1, score2, time1, time2, data.NStar, data.NShip, data.NUfo));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
